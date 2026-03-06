@@ -32,14 +32,6 @@ def write_json(path, obj):
     with open(path, "w") as f:
         json.dump(sanitise(obj), f, indent=2)
     print(f"  wrote {path}")
-            return {k: sanitise(v) for k, v in obj.items()}
-        if isinstance(obj, list):
-            return [sanitise(v) for v in obj]
-        return obj
-
-    with open(path, "w") as f:
-        json.dump(sanitise(obj), f, indent=2)
-    print(f"  wrote {path}")
 
 # ── 1. results.json  (deliverables) ─────────────────────────────────
 expected_path = os.path.join(REF_DIR, "expected.json")
