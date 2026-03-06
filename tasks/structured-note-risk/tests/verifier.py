@@ -244,8 +244,6 @@ def check_intermediates(
     matched_refs = set()
 
     # ── Label matching: agent term → reference checkpoint ──
-    for term_name, entry in intermediates.items():
-        # Accept both {"value": x} dicts and flat numeric values
         if isinstance(entry, dict):
             agent_value = entry.get("value")
         elif isinstance(entry, (int, float)):
