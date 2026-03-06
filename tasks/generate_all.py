@@ -1261,7 +1261,6 @@ def solve_sentiment(prices_data=None, dates=None, tickers=None,
     alpha_ann_compound = (1 + alpha_daily) ** 252 - 1  # compound (alt)
 
     print(f"    alpha_daily = {alpha_daily:.10f}")
-    print(f"    alpha_ann (simple) = {alpha_ann:.6f}")
     print(f"    alpha_ann (compound) = {alpha_ann_compound:.6f}")
     print(f"    beta = {beta:.6f}")
     print(f"    r_squared = {r_squared:.6f}")
