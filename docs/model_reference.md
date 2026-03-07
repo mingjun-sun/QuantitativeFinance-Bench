@@ -111,7 +111,6 @@ If these pass, the task is too easy for the benchmark.
 | Gemini CLI + Gemini 2.5 Flash | `harbor run --agent gemini-cli --model gemini/gemini-2.5-flash-preview-09-2025` |
 | Finance-Zero + Gemini 2.0 Flash | `harbor run --agent-import-path agents.finance_zero:FinanceZeroAgent --model gemini/gemini-2.0-flash` |
 | Finance-Zero + GPT-4o-mini | `harbor run --agent-import-path agents.finance_zero:FinanceZeroAgent --model openai/gpt-4o-mini` |
-| Finance-Zero + Haiku 4.5 | `harbor run --agent-import-path agents.finance_zero:FinanceZeroAgent --model anthropic/claude-haiku-4-5-20251001` |
 
 ---
 
