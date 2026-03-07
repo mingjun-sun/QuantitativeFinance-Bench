@@ -16,9 +16,16 @@ def load_json(path):
     """Load JSON, converting JavaScript NaN/Infinity to Python equivalents."""
     with open(path) as f:
         return json.loads(f.read())
+
 def write_json(path, obj):
+    """Write JSON, converting Python NaN/Infinity to JSON null."""
+    def default_serialiser(o):
+        if isinstance(o, float):
+            if math.isnan(o) or math.isinf(o):
+                return None
+        raise TypeError(f"Object of type {type(o)} is not JSON serializable")
+
     # First pass: walk the object and replace nan/inf with None so
-    # json.dumps produces valid JSON (nan is not valid JSON).
     # json.dumps produces valid JSON (nan is not valid JSON).
     def sanitise(obj):
         if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
@@ -31,6 +38,7 @@ def write_json(path, obj):
 
     with open(path, "w") as f:
         json.dump(sanitise(obj), f, indent=2)
+    print(f"  wrote {path}")
 
 # ── 1. results.json  (deliverables) ─────────────────────────────────
 expected_path = os.path.join(REF_DIR, "expected.json")

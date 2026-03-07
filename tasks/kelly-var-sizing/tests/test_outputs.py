@@ -28,7 +28,4 @@ def test_verification():
         task_meta=TASK_META,
     )
     print(f"Classification: {classification}")
-    assert classification != "WRONG", (
-        f"Verification failed: classification={classification!r}. "
-        "Check diagnostic.json for details."
-    )
+    assert classification == "PERFECT", f"Verification failed: {classification}"

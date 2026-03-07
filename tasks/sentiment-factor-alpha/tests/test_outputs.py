@@ -27,4 +27,5 @@ def test_verification():
         log_dir=Path("/logs/verifier"),
         task_meta=TASK_META,
     )
+    print(f"Classification: {classification}")
     assert classification == "PERFECT", f"Verification failed: {classification}"

@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import json
 import math
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -82,6 +81,16 @@ def _resolve_path(data: dict, path: str) -> Any:
         else:
             return None
     return obj
+
+
+def _norm_drawdown(name: str, agent_val: Any, ref_val: Any) -> tuple:
+    """Normalize drawdown sign — accept both positive and negative convention."""
+    if "drawdown" in name.lower():
+        if isinstance(agent_val, (int, float)):
+            agent_val = abs(agent_val)
+        if isinstance(ref_val, (int, float)):
+            ref_val = abs(ref_val)
+    return agent_val, ref_val
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -260,11 +269,8 @@ def check_intermediates(
             tol = ref_cp.get("tolerance", {"rtol": 1e-3})
 
             # Normalize drawdown sign — accept both positive and negative convention
-            if "drawdown" in term_name.lower() and isinstance(agent_value, (int, float)):
-                agent_value = abs(agent_value)
             ref_value = ref_cp["value"]
-            if "drawdown" in term_name.lower() and isinstance(ref_value, (int, float)):
-                ref_value = abs(ref_value)
+            agent_value, ref_value = _norm_drawdown(term_name, agent_value, ref_value)
 
             value_correct = False
             if agent_value is not None:
@@ -312,9 +318,7 @@ def check_intermediates(
                     continue
                 if agent_value is not None:
                     tol = ref_cp.get("tolerance", {"rtol": 1e-3})
-                    # Normalize drawdown sign for value matching too
-                    cmp_agent = abs(agent_value) if "drawdown" in ref_name.lower() and isinstance(agent_value, (int, float)) else agent_value
-                    cmp_ref = abs(ref_cp["value"]) if "drawdown" in ref_name.lower() and isinstance(ref_cp["value"], (int, float)) else ref_cp["value"]
+                    cmp_agent, cmp_ref = _norm_drawdown(ref_name, agent_value, ref_cp["value"])
                     if check_value(cmp_agent, cmp_ref, tol):
                         value_matched_ref = ref_name
                         matched_refs.add(ref_name)
@@ -386,53 +390,25 @@ def check_intermediates(
 def _check_edges(intermediates: dict, concept_sub: dict) -> dict:
     """Check that from-edges don't contradict KM prerequisite ordering.
 
-    An edge A→B (B.from contains A) is invalid if A is a DESCENDANT
-    of B in the KM — meaning the direction is reversed.
+    Counts structural edges between intermediates. Full validation
+    requires a KM mapping (concept → checkpoint) which is not yet
+    provided, so all counted edges default to valid for now.
     """
     edges = concept_sub.get("edges", [])
     if not edges:
-        return {"checked": 0, "valid": 0, "invalid": 0, "details": []}
-
-    # Build ancestor lookup from KM edges
-    # KM edges: {"from": ancestor, "to": descendant}
-    children: dict[str, set[str]] = {}
-    for e in edges:
-        children.setdefault(e["from"], set()).add(e["to"])
-
-    def is_descendant(node: str, ancestor: str, visited: set | None = None) -> bool:
-        """Check if node is a descendant of ancestor in KM."""
-        if visited is None:
-            visited = set()
-        if ancestor in visited:
-            return False
-        visited.add(ancestor)
-        for child in children.get(ancestor, set()):
-            if child == node or is_descendant(node, child, visited):
-                return True
-        return False
+        return {"checked": 0, "valid": 0, "invalid": 0}
 
     checked = 0
-    valid = 0
-    invalid = 0
-    details = []
-
-    for term_name, entry in intermediates.items():
+    for entry in intermediates.values():
         if not isinstance(entry, dict):
             continue
-        from_list = entry.get("from", [])
-        for dep in from_list:
+        for dep in entry.get("from", []):
             dep_base = dep.split(":")[0] if ":" in dep else dep
-            if dep_base.startswith("input"):
-                continue  # input refs are always valid
-            if dep_base not in intermediates:
-                continue  # dangling ref — checked elsewhere
-
-            # Both are intermediates — check if the direction is valid
-            # This is a structural plausibility check
+            if dep_base.startswith("input") or dep_base not in intermediates:
+                continue
             checked += 1
-            valid += 1  # Default valid (can't contradict without KM mapping)
 
-    return {"checked": checked, "valid": valid, "invalid": invalid, "details": details}
+    return {"checked": checked, "valid": checked, "invalid": 0}
 
 
 def _count_dangling(intermediates: dict, deliverables: dict) -> int:

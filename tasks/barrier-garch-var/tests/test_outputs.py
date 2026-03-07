@@ -29,5 +29,6 @@ def test_verification():
         task_meta=TASK_META,
     )
     print(f"Classification: {classification}")
+    assert classification == "PERFECT", f"Verification failed: {classification}"
     # Partial credit is written to reward.txt by the verifier.
     # Test always passes so the verifier's reward is not overwritten.

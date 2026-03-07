@@ -28,3 +28,4 @@ def test_verification():
         task_meta=TASK_META,
     )
     print(f"Classification: {classification}")
+    assert classification == "PERFECT", f"Verification failed: {classification}"
