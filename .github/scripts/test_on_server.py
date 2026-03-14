@@ -131,10 +131,13 @@ def validate_canary(task_dir: Path) -> tuple[bool, list[str]]:
     for pattern in ("**/*.py", "**/*.sh", "**/Dockerfile"):
         for f in task_dir.glob(pattern):
             try:
-                if CANARY not in f.read_text():
-                    missing.append(str(f.relative_to(task_dir)))
-            except Exception:
-                pass
+                text = f.read_text()
+            except Exception as e:
+                # Treat unreadable files as validation failures so the workflow can surface the problem.
+                missing.append(f"{f.relative_to(task_dir)} (unreadable: {e.__class__.__name__})")
+                continue
+            if CANARY not in text:
+                missing.append(str(f.relative_to(task_dir)))
     return len(missing) == 0, missing
 
 
