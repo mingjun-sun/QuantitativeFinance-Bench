@@ -89,12 +89,14 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
       # --- Copy script & run on server ---
       - name: Copy test script to server
         run: |
           scp -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=yes \
             .github/scripts/test_on_server.py \
             ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/test_on_server.py
 
@@ -103,6 +105,7 @@ jobs:
           ssh -i ~/.ssh/deploy_key \
             -o ServerAliveInterval=30 \
             -o ServerAliveCountMax=10 \
+            -o StrictHostKeyChecking=yes \
             ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
             "python3 /tmp/test_on_server.py \
               '${{ secrets.DEPLOY_REPO_PATH }}' \
@@ -114,6 +117,7 @@ jobs:
         if: always()
         run: |
           scp -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=yes \
             ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/test_deploy_results.json \
             /tmp/results.json 2>/dev/null || echo '{"status":"error","error":"Failed to fetch results from server"}' > /tmp/results.json
 
